@@ -11,6 +11,10 @@ export default async function handler(req, res) {
   try {
     const { prompt, size = '1024x1024' } = req.body;
 
+    // Valid DALL-E 3 sizes only
+    const validSizes = ['1024x1024', '1792x1024', '1024x1792'];
+    const safeSize = validSizes.includes(size) ? size : '1024x1024';
+
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -21,14 +25,24 @@ export default async function handler(req, res) {
         model: 'dall-e-3',
         prompt: prompt,
         n: 1,
-        size: size,
+        size: safeSize,
         response_format: 'b64_json',
         quality: 'standard'
       })
     });
 
     const data = await response.json();
-    if (!response.ok) return res.status(response.status).json(data);
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: data.error?.message || 'DALL-E error' });
+    }
+
+    // Check for null content (content policy rejection)
+    if (!data.data || !data.data[0] || !data.data[0].b64_json) {
+      const reason = data.data?.[0]?.revised_prompt || 'Content policy rejection';
+      return res.status(400).json({ error: `Image blocked by content policy. Try a different prompt. Reason: ${reason}` });
+    }
+
     res.status(200).json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
