@@ -1,7 +1,12 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/(.*)", "destination": "/public/index.html" }
+  "outputDirectory": "public",
+  "functions": {
+    "api/*.js": { "runtime": "@vercel/node@3" }
+  },
+  "routes": [
+    { "src": "/api/generate", "dest": "/api/generate.js" },
+    { "src": "/api/imagen", "dest": "/api/imagen.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
