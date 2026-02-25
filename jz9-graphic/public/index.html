@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JZ9 Graphic Prompt - AI Visual Architecture v10.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Kanit:wght@200;300;400;500;600;700&family=Mitr:wght@500&family=Chakra+Petch:wght@400;700&family=Charm:wght@700&family=Sriracha&family=Prompt:wght@300;400;800&family=Sarabun:wght@400;700&family=Noto+Serif+Thai:wght@400;700&display=swap');
+        
+        :root {
+            --terminal-green: #00ff41;
+            --neon-glow: rgba(0, 255, 65, 0.4);
+            --dark-bg: #05070a;
+            --panel-bg: rgba(22, 27, 34, 0.8);
+            --border-color: rgba(0, 255, 65, 0.15);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scanLine { 0% { transform: translateY(-100%); } 100% { transform: translateY(1000%); } }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 65, 0.1); } 50% { box-shadow: 0 0 25px rgba(0, 255, 65, 0.3); } }
+        @keyframes logoFloat { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background-color: var(--dark-bg); 
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 65, 0.05) 0%, transparent 70%),
+                linear-gradient(rgba(0, 255, 65, 0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.01) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            color: #e6edf3;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(to right, transparent, var(--terminal-green), transparent);
+            opacity: 0.1;
+            animation: scanLine 8s linear infinite;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .mono { font-family: 'Fira Code', monospace; }
+        .cyber-font { font-family: 'Chakra Petch', sans-serif; }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeIn 0.6s ease-out backwards;
+        }
+        .glass-panel:hover { border-color: rgba(0,255,65,0.4); transform: scale(1.002); box-shadow: 0 10px 40px rgba(0, 255, 65, 0.1); }
+
+        .terminal-input { background: rgba(0, 0, 0, 0.6); border: 1px solid #30363d; color: var(--terminal-green); transition: all 0.3s ease; }
+        .terminal-input:focus { border-color: var(--terminal-green); box-shadow: 0 0 15px var(--neon-glow); outline: none; background: rgba(0, 0, 0, 0.8); }
+
+        .btn-primary { background: var(--terminal-green); color: #000; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; transition: all 0.3s ease; box-shadow: 0 0 15px var(--neon-glow); animation: pulseGlow 3s infinite; }
+        .btn-primary:hover:not(:disabled) { background: #fff; box-shadow: 0 0 35px var(--terminal-green); transform: translateY(-3px); }
+
+        .btn-secondary { border: 1px solid var(--terminal-green); color: var(--terminal-green); background: rgba(0, 255, 65, 0.05); text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s ease; }
+        .btn-secondary:hover:not(:disabled) { background: rgba(0, 255, 65, 0.2); box-shadow: 0 0 15px var(--neon-glow); transform: scale(1.05); }
+
+        .font-card { border: 1px solid #30363d; cursor: pointer; transition: all 0.3s ease; background: rgba(0,0,0,0.4); text-align: center; }
+        .font-card:hover { border-color: var(--terminal-green); transform: translateY(-3px); }
+        .font-card.active { border-color: var(--terminal-green); background: rgba(0, 255, 65, 0.1); box-shadow: inset 0 0 15px var(--neon-glow); }
+
+        .loading-spinner { border: 3px solid rgba(0, 255, 65, 0.1); border-top: 3px solid var(--terminal-green); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--dark-bg); }
+        ::-webkit-scrollbar-thumb { background: #21262d; border-radius: 10px; border: 1px solid var(--terminal-green); }
+
+        .app-logo { animation: logoFloat 4s ease-in-out infinite; }
+        .history-item { border-left: 3px solid #30363d; margin-bottom: 10px; padding: 12px; cursor: pointer; background: rgba(255,255,255,0.02); transition: all 0.3s; animation: fadeIn 0.4s ease-out; }
+        .history-item:hover { border-left-color: var(--terminal-green); background: rgba(0, 255, 65, 0.08); transform: translateX(5px); }
+        .pulse-text { animation: pulseGlow 2s infinite; }
+
+        #notification { position: fixed; bottom: 30px; right: 30px; background: var(--terminal-green); color: #000; padding: 15px 30px; border-radius: 50px; font-weight: 900; font-family: 'Fira Code', monospace; font-size: 12px; box-shadow: 0 0 30px var(--neon-glow); transform: translateY(150px); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 9999; text-transform: uppercase; pointer-events: none; }
+
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #30363d; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--terminal-green); }
+        input:checked + .slider:before { transform: translateX(22px); background-color: #000; }
+
+        .quick-res-btn { background: rgba(48, 54, 61, 0.5); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 4px; font-size: 10px; color: #8b949e; }
+        .quick-res-btn:hover { border-color: var(--terminal-green); color: var(--terminal-green); }
+
+        /* Error banner */
+        #errorBanner { display: none; background: rgba(255,50,50,0.15); border: 1px solid rgba(255,50,50,0.4); color: #ff6b6b; padding: 12px 20px; border-radius: 12px; font-family: 'Fira Code', monospace; font-size: 11px; margin-bottom: 16px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div id="app" class="max-w-[1700px] mx-auto">
+
+        <!-- Error Banner -->
+        <div id="errorBanner"></div>
+
+        <!-- Header -->
+        <header class="flex flex-wrap justify-between items-center mb-12 border-b border-gray-800 pb-8 gap-6">
+            <div class="flex items-center gap-6 app-logo">
+                <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="5" width="90" height="90" rx="15" stroke="var(--terminal-green)" stroke-width="2" fill="rgba(0,255,65,0.05)"/>
+                    <path d="M25 35C25 35 30 30 40 30" stroke="var(--terminal-green)" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M75 65C75 65 70 70 60 70" stroke="var(--terminal-green)" stroke-width="3" stroke-linecap="round"/>
+                    <text x="50" y="58" text-anchor="middle" fill="white" font-family="Chakra Petch" font-size="24" font-weight="900" style="filter: drop-shadow(0 0 5px var(--terminal-green))">JZ9</text>
+                    <path d="M65 25L75 25L75 35" stroke="var(--terminal-green)" stroke-width="2"/>
+                    <circle cx="75" cy="25" r="3" fill="var(--terminal-green)"/>
+                    <rect x="25" y="65" width="15" height="10" rx="2" fill="var(--terminal-green)" opacity="0.3"/>
+                    <path d="M20 75L30 75" stroke="var(--terminal-green)" stroke-width="2"/>
+                    <circle cx="85" cy="15" r="1.5" fill="white" class="pulse-text"/>
+                </svg>
+                <div class="relative">
+                    <div class="absolute -top-6 -left-1 text-[10px] mono text-[var(--terminal-green)] opacity-70 uppercase tracking-[0.3em]">System_Status: Optimal</div>
+                    <h1 class="text-5xl md:text-7xl font-black cyber-font text-white tracking-tighter uppercase">
+                        JZ9<span class="text-[var(--terminal-green)]">_</span>GRAPHIC
+                    </h1>
+                    <div class="flex items-center gap-3 mt-2">
+                        <div class="h-1.5 w-20 bg-[var(--terminal-green)] rounded-full shadow-[0_0_10px_var(--terminal-green)]"></div>
+                        <p class="text-[11px] text-gray-500 mono uppercase tracking-[0.5em] font-bold">Visual Master Engine v10.1</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <button onclick="exportToCSV()" class="btn-secondary px-5 py-3 rounded-xl mono text-[11px] font-black border-dashed">SAVE_TO_CSV</button>
+                <button onclick="document.getElementById('csvInput').click()" class="btn-secondary px-5 py-3 rounded-xl mono text-[11px] font-black border-dashed">LOAD_FROM_CSV</button>
+                <input type="file" id="csvInput" accept=".csv" class="hidden" onchange="importFromCSV(this)">
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+            <!-- Left: Inputs -->
+            <div class="xl:col-span-8 space-y-8">
+
+                <!-- Idea Generator -->
+                <div class="glass-panel p-8 rounded-3xl relative overflow-hidden">
+                    <div class="absolute -top-20 -right-20 w-60 h-60 bg-[var(--terminal-green)] opacity-[0.03] blur-3xl rounded-full"></div>
+                    <h2 class="text-xs font-bold mb-5 flex items-center gap-3 text-[var(--terminal-green)] mono uppercase tracking-widest">
+                        <span class="p-2 bg-[var(--terminal-green)]/10 rounded-lg">⚡</span> INTELLIGENT_IDEATOR
+                    </h2>
+                    <div class="flex flex-col md:flex-row gap-5">
+                        <input type="text" id="sellingPoint" class="flex-1 p-5 terminal-input rounded-2xl text-sm" placeholder="ระบุสิ่งที่อยากขายเพื่อให้ AI ช่วยคิดคอนเทนต์และภาพถ่ายระดับโปร...">
+                        <button id="aiWriteBtn" class="btn-primary px-10 py-5 rounded-2xl flex items-center justify-center gap-4 mono text-sm min-w-[240px]">
+                            <span>GENERATE_IDEAS</span>
+                            <div id="aiWriteLoader" class="loading-spinner hidden" style="border-top-color: black;"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Visual Architecture Core -->
+                <div class="glass-panel p-10 rounded-3xl">
+                    <div class="flex items-center justify-between mb-10 border-b border-gray-800 pb-6">
+                        <h2 class="text-xl font-bold cyber-font uppercase tracking-widest flex items-center gap-4">
+                            <span class="text-[var(--terminal-green)]">[01]</span> VISUAL_CORE_CONFIG
+                        </h2>
+                        <div class="flex items-center gap-8">
+                            <div class="flex items-center gap-4">
+                                <span class="text-[10px] font-bold text-gray-500 mono uppercase">PROMPT_MODE:</span>
+                                <select id="promptMode" class="bg-transparent text-[10px] text-[var(--terminal-green)] mono outline-none cursor-pointer font-bold">
+                                    <option value="Generate">FRESH_GEN</option>
+                                    <option value="Reference">IMAGE_REF_MODE</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-[10px] font-bold text-gray-500 mono uppercase">STYLE_LOCK:</span>
+                                <label class="switch"><input type="checkbox" id="lockStyle"><span class="slider"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-[10px] uppercase text-gray-500 mb-3 mono font-bold tracking-wider">Project Type</label>
+                                <select id="graphicType" class="w-full p-4 terminal-input rounded-xl text-xs">
+                                    <option value="Movie Poster">Movie Poster</option>
+                                    <option value="Promotion Image">Promotion Image</option>
+                                    <option value="Announcement Image">Announcement Image</option>
+                                    <option value="Game Ad">Game Ad</option>
+                                    <option value="Luxury Ad">Luxury Ad</option>
+                                    <option value="Logo Design">Logo Design</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-gray-500 mb-3 mono font-bold tracking-wider">Visual Style</label>
+                                <select id="style" class="w-full p-4 terminal-input rounded-xl text-xs">
+                                    <option value="Cinematic High Fidelity">Cinematic</option>
+                                    <option value="3D Cartoon Pixar Style">3D Cartoon (Pixar)</option>
+                                    <option value="2D Cartoon Style">การ์ตูน 2D</option>
+                                    <option value="PG Slot Game Style">PG Slot Style</option>
+                                    <option value="Cyberpunk Neon">Cyberpunk</option>
+                                    <option value="Luxury Gold/Dark">Luxury Gold</option>
+                                    <option value="3D Realistic Render">3D Realistic</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-[10px] uppercase text-gray-500 mb-3 mono font-bold tracking-wider">Background (14 Types)</label>
+                                <select id="backgroundSetting" class="w-full p-4 terminal-input rounded-xl text-xs">
+                                    <option value="None/Auto">None (อัตโนมัติ)</option>
+                                    <option value="Solid / Minimal">1) Solid / Minimal</option>
+                                    <option value="Gradient">2) Gradient</option>
+                                    <option value="Texture">3) Texture</option>
+                                    <option value="Pattern">4) Pattern</option>
+                                    <option value="Photo Background">5) Photo</option>
+                                    <option value="Blur / Bokeh">6) Blur / Bokeh</option>
+                                    <option value="Neon / Glow">7) Neon / Glow</option>
+                                    <option value="Dark Luxury">8) Dark Luxury</option>
+                                    <option value="Illustration">9) Illustration</option>
+                                    <option value="3D Scene">10) 3D Scene</option>
+                                    <option value="Collage">11) Collage</option>
+                                    <option value="Studio">12) Studio</option>
+                                    <option value="Grid / UI">13) Grid / UI</option>
+                                    <option value="Organic">14) Organic</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-gray-500 mb-3 mono font-bold tracking-wider">Color Tone</label>
+                                <input type="text" id="colorTone" class="w-full p-4 terminal-input rounded-xl text-xs" placeholder="เขียว-ดำ, แดง-ทอง, นีออน">
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-[10px] uppercase text-gray-500 mb-3 mono font-bold tracking-wider">Resolution</label>
+                                <div class="flex gap-2 mb-3">
+                                    <button onclick="setRes(1024, 1024)" class="quick-res-btn">1:1</button>
+                                    <button onclick="setRes(1080, 1920)" class="quick-res-btn">9:16</button>
+                                    <button onclick="setRes(1920, 1080)" class="quick-res-btn">16:9</button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="number" id="imgWidth" class="w-full p-4 terminal-input rounded-xl text-xs" value="1024">
+                                    <input type="number" id="imgHeight" class="w-full p-4 terminal-input rounded-xl text-xs" value="1024">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-gray-500 mb-3 mono font-bold tracking-wider">Festival</label>
+                                <select id="festival" class="w-full p-4 terminal-input rounded-xl text-xs">
+                                    <option value="General">None (ทั่วไป)</option>
+                                    <option value="Valentine's Day">Valentine's Day</option>
+                                    <option value="Songkran Festival">Songkran</option>
+                                    <option value="Chinese New Year">Chinese New Year</option>
+                                    <option value="New Year">New Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-[10px] uppercase text-gray-500 mb-3 mono font-bold tracking-wider">Action</label>
+                                <select id="modelAction" class="w-full p-4 terminal-input rounded-xl text-xs">
+                                    <option value="None/Auto">Auto (อัตโนมัติ)</option>
+                                    <option value="Smiling and looking at camera">ยิ้มให้กล้อง</option>
+                                    <option value="Holding a product/item">ยืนถือสินค้า</option>
+                                    <option value="Pointing to the text">ชี้ไปที่ข้อความ</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-gray-500 mb-3 mono font-bold tracking-wider">Lighting</label>
+                                <select id="lighting" class="w-full p-4 terminal-input rounded-xl text-xs">
+                                    <option value="None/Auto">None (อัตโนมัติ)</option>
+                                    <option value="Studio Professional">สตูดิโอ</option>
+                                    <option value="Neon Glow">แสงนีออน</option>
+                                    <option value="Dramatic Shadows">ดราม่าเน้นเงา</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Typography -->
+                    <div class="mt-10 pt-10 border-t border-gray-800">
+                        <label class="block text-[11px] uppercase text-[var(--terminal-green)] mb-6 mono font-bold tracking-widest flex items-center gap-3">
+                            <span class="w-2.5 h-2.5 bg-[var(--terminal-green)] rounded-full animate-pulse"></span>
+                            TYPOGRAPHY_ARCHITECT (Select Preset)
+                        </label>
+                        <div id="fontSelectorList" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-10 gap-4">
+                            <div class="font-card active" data-font="None/Auto" data-type="TH_ONLY"><div class="p-4 text-[10px] opacity-40 font-bold mono">AUTO</div></div>
+                            <div class="font-card" data-font="TH_CLEAN_UI" data-type="TH_ONLY"><div class="p-4" style="font-family: 'Sarabun'; font-size: 13px;">สะอาดตา</div></div>
+                            <div class="font-card" data-font="TH_PROMO_BOLD" data-type="TH_ONLY"><div class="p-4" style="font-family: 'Kanit'; font-weight: 700; font-size: 13px;">พาดหัวแรง</div></div>
+                            <div class="font-card" data-font="TH_ROUNDED_FRIENDLY" data-type="TH_ONLY"><div class="p-4" style="font-family: 'Mitr'; font-size: 13px;">เป็นกันเอง</div></div>
+                            <div class="font-card" data-font="TH_LUXE_SERIF" data-type="TH_ONLY"><div class="p-4" style="font-family: 'Noto Serif Thai'; font-size: 13px;">หรูหรา</div></div>
+                            <div class="font-card" data-font="MIX_CLEAN_GLOBAL" data-type="TH_EN_MIX"><div class="p-4" style="font-family: 'Noto Sans Thai'; font-size: 11px;">Global <span style="font-family: 'Inter';">Mix</span></div></div>
+                            <div class="font-card" data-font="MIX_PROMO_IMPACT" data-type="TH_EN_MIX"><div class="p-4" style="font-family: 'Kanit'; font-weight: 700; font-size: 11px;">PROMO IMPACT</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Triple Depth Inputs -->
+                    <div class="mt-10 pt-10 border-t border-gray-800 space-y-8">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div>
+                                <label class="block text-[10px] uppercase text-gray-500 mb-3 mono font-bold tracking-widest">Visual Subject / สิ่งที่ต้องการในภาพ</label>
+                                <textarea id="subject" rows="3" class="w-full p-5 terminal-input rounded-3xl text-sm" placeholder="ระบุสิ่งที่ต้องการให้ปรากฏในภาพ..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-cyan-500 mb-3 mono font-bold tracking-widest">Target Insight / ข้อมูลอินไซต์</label>
+                                <textarea id="insight" rows="3" class="w-full p-5 terminal-input rounded-3xl text-sm border-cyan-900/30" placeholder="ระบุข้อมูลเชิงลึก เช่น กลุ่มเป้าหมาย, อารมณ์..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-pink-500 mb-3 mono font-bold tracking-widest">Visual DNA / อัตลักษณ์ทางศิลปะ</label>
+                                <textarea id="visualDna" rows="3" class="w-full p-5 terminal-input rounded-3xl text-sm border-pink-900/30" placeholder="กำหนดองค์ประกอบศิลป์, โทนสีเฉพาะ..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Overlay Layer -->
+                <div class="glass-panel p-10 rounded-3xl">
+                    <h3 class="text-xs font-bold text-gray-400 mb-8 mono uppercase tracking-widest">// TEXT_RENDER_LAYERS</h3>
+                    <div class="space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <input type="text" id="headline" class="w-full p-4 terminal-input rounded-2xl text-sm" placeholder="Headline">
+                            <input type="text" id="subheadline" class="w-full p-4 terminal-input rounded-2xl text-sm" placeholder="Sub-headline">
+                        </div>
+                        <input type="text" id="benefitText" class="w-full p-4 terminal-input rounded-2xl text-sm border-dashed border-[var(--terminal-green)]/30" placeholder="Benefits (แยกด้วย | เช่น ฝากไว | ถอนจริง)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <input type="text" id="ctaText" class="w-full p-4 terminal-input rounded-2xl text-sm border-[var(--terminal-green)]/20" placeholder="CTA Button Text (หากไม่กรอกจะไม่แสดง)">
+                            <input type="text" id="footerText" class="w-full p-4 terminal-input rounded-2xl text-sm" placeholder="URL/Footer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exclusion -->
+                <div class="glass-panel p-10 rounded-3xl border-red-900/10">
+                    <h3 class="text-xs font-bold text-red-500 mb-5 mono uppercase tracking-widest">// NEGATIVE_CONSTRAINTS</h3>
+                    <textarea id="negativePrompt" rows="4" class="w-full p-5 terminal-input rounded-3xl text-sm border-red-900/20" placeholder="ระบุสิ่งที่ไม่ต้องการให้ปรากฏในภาพ..."></textarea>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="xl:col-span-4 space-y-8">
+                <div class="glass-panel p-8 rounded-3xl">
+                    <div id="imageContainer" class="bg-black/60 w-full max-w-[300px] aspect-square rounded-[2rem] flex items-center justify-center relative overflow-hidden border border-gray-800 mx-auto shadow-inner transition-all mb-8">
+                        <div id="imagePlaceholder" class="text-gray-700 text-center px-10">
+                            <svg class="w-10 h-10 border-2 border-dashed border-gray-800 rounded-full p-1.5 mx-auto mb-2 opacity-30 pulse-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <p class="mono text-[7px] opacity-20 uppercase tracking-tighter">Buffer_Ready</p>
+                        </div>
+                        <img id="resultImage" src="" class="hidden w-full h-full object-contain">
+                        
+                        <div id="generatingStatus" class="hidden absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-10 backdrop-blur-md">
+                            <div class="loading-spinner mb-4 w-10 h-10 border-[2px]"></div>
+                            <span class="mono text-[var(--terminal-green)] text-[9px] animate-pulse uppercase tracking-[0.5em]">Synthesizing...</span>
+                            <div class="text-[7px] text-gray-600 mt-3 mono uppercase" id="currentStep">...</div>
+                        </div>
+                    </div>
+
+                    <!-- Download button (shows after generation) -->
+                    <div id="downloadBar" class="hidden mb-4 flex justify-center">
+                        <button onclick="downloadImage()" class="btn-secondary px-8 py-3 rounded-xl mono text-[11px] font-black">⬇ DOWNLOAD_IMAGE</button>
+                    </div>
+
+                    <button id="executeBtn" class="btn-primary w-full py-7 rounded-[2rem] flex items-center justify-center gap-5 mono text-base group">
+                        <span class="font-black uppercase tracking-widest text-lg">Execute_Job</span>
+                        <svg class="w-7 h-7 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+
+                <!-- History -->
+                <div class="glass-panel p-8 rounded-3xl">
+                    <h3 class="text-[11px] font-bold text-[var(--terminal-green)] mono mb-6 uppercase tracking-widest border-b border-gray-800 pb-3 flex justify-between items-center">
+                        <span>SESSION_BUFFER</span>
+                        <span class="text-gray-600 text-[9px]">v10.1</span>
+                    </h3>
+                    <div id="historyList" class="max-h-[180px] overflow-y-auto scroll-smooth pr-2">
+                        <p class="italic p-4 text-center opacity-30 text-[10px] mono">Memory buffer empty.</p>
+                    </div>
+                </div>
+
+                <!-- Console Output -->
+                <div class="glass-panel p-8 rounded-3xl border-cyan-900/20">
+                    <div class="flex justify-between items-center mb-5">
+                        <span class="text-[10px] text-cyan-500 mono font-bold uppercase tracking-widest">CONSOLE_STREAM</span>
+                        <button onclick="copyJson()" class="text-[10px] text-[var(--terminal-green)] hover:underline mono font-bold uppercase">Sync_Copy</button>
+                    </div>
+                    <pre id="jsonOutput" class="bg-black/80 p-5 rounded-2xl text-[11px] text-[#88eeff] mono h-[140px] overflow-auto border border-cyan-900/10">{}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification">SYSTEM_READY</div>
+
+    <script>
+        // ═══════════════════════════════════════════
+        //  JZ9 GRAPHIC ENGINE v10.1 — VERCEL EDITION
+        //  API calls routed through /api/* proxy
+        // ═══════════════════════════════════════════
+
+        let selectedFont = "None/Auto";
+        let sessionHistory = [];
+        let lastGeneratedImageUrl = null;
+
+        const ui = {
+            sellingPoint: document.getElementById('sellingPoint'),
+            aiWriteBtn: document.getElementById('aiWriteBtn'),
+            aiWriteLoader: document.getElementById('aiWriteLoader'),
+            headline: document.getElementById('headline'),
+            sub: document.getElementById('subheadline'),
+            benefit: document.getElementById('benefitText'),
+            cta: document.getElementById('ctaText'),
+            footer: document.getElementById('footerText'),
+            subject: document.getElementById('subject'),
+            insight: document.getElementById('insight'),
+            visualDna: document.getElementById('visualDna'),
+            negativePrompt: document.getElementById('negativePrompt'),
+            lockStyle: document.getElementById('lockStyle'),
+            executeBtn: document.getElementById('executeBtn'),
+            jsonOutput: document.getElementById('jsonOutput'),
+            resultImage: document.getElementById('resultImage'),
+            imagePlaceholder: document.getElementById('imagePlaceholder'),
+            status: document.getElementById('generatingStatus'),
+            currentStep: document.getElementById('currentStep'),
+            noti: document.getElementById('notification'),
+            fontCards: document.querySelectorAll('.font-card'),
+            historyList: document.getElementById('historyList'),
+            promptMode: document.getElementById('promptMode'),
+            graphicType: document.getElementById('graphicType'),
+            style: document.getElementById('style'),
+            bg: document.getElementById('backgroundSetting'),
+            colorTone: document.getElementById('colorTone'),
+            imgWidth: document.getElementById('imgWidth'),
+            imgHeight: document.getElementById('imgHeight'),
+            festival: document.getElementById('festival'),
+            modelAction: document.getElementById('modelAction'),
+            lighting: document.getElementById('lighting'),
+            errorBanner: document.getElementById('errorBanner'),
+            downloadBar: document.getElementById('downloadBar')
+        };
+
+        // ─── API HELPERS (proxy through Vercel) ───
+        async function callGenerate(payload, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch('/api/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error?.message || data.error || 'API Error');
+                    return data;
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                    await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+                }
+            }
+        }
+
+        async function callImagen(payload, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch('/api/imagen', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error?.message || data.error || 'Imagen Error');
+                    return data;
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                    await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+                }
+            }
+        }
+
+        function showError(msg) {
+            ui.errorBanner.style.display = 'block';
+            ui.errorBanner.textContent = `⚠ ERROR: ${msg}`;
+            setTimeout(() => { ui.errorBanner.style.display = 'none'; }, 8000);
+        }
+
+        // ─── CSV ENGINE ───
+        function exportToCSV() {
+            const dataMap = {
+                sellingPoint: ui.sellingPoint.value, headline: ui.headline.value, sub: ui.sub.value,
+                benefit: ui.benefit.value, cta: ui.cta.value, footer: ui.footer.value,
+                subject: ui.subject.value, insight: ui.insight.value, visualDna: ui.visualDna.value,
+                negativePrompt: ui.negativePrompt.value, mode: ui.promptMode.value,
+                type: ui.graphicType.value, style: ui.style.value, bg: ui.bg.value,
+                width: ui.imgWidth.value, height: ui.imgHeight.value, tone: ui.colorTone.value,
+                font: selectedFont, lock: ui.lockStyle.checked ? "true" : "false",
+                action: ui.modelAction.value, lighting: ui.lighting.value, festival: ui.festival.value
+            };
+            const headers = Object.keys(dataMap).join(",");
+            const values = Object.values(dataMap).map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+            const blob = new Blob([headers + "\n" + values], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `JZ9_Config_${Date.now()}.csv`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            showNotification("CSV_SAVED_OK");
+        }
+
+        function importFromCSV(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
+                    if (lines.length < 2) throw new Error("Format error");
+                    const headers = lines[0].split(",");
+                    const vals = lines[1].match(/(".*?"|[^,]+)/g).map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
+                    const data = {};
+                    headers.forEach((h, i) => data[h.trim()] = vals[i]);
+                    populateForm(data);
+                    showNotification("CSV_LOADED_OK");
+                } catch (err) { showNotification("ERR: CSV_PARSE_FAIL"); }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        function populateForm(data) {
+            if (data.sellingPoint !== undefined) ui.sellingPoint.value = data.sellingPoint;
+            ['headline','sub','benefit','cta','footer','subject','insight','visualDna','negativePrompt'].forEach(k => { if (data[k] !== undefined) ui[k].value = data[k]; });
+            if (data.mode) ui.promptMode.value = data.mode;
+            if (data.type) ui.graphicType.value = data.type;
+            if (data.style) ui.style.value = data.style;
+            if (data.bg) ui.bg.value = data.bg;
+            if (data.width) ui.imgWidth.value = data.width;
+            if (data.height) ui.imgHeight.value = data.height;
+            if (data.tone) ui.colorTone.value = data.tone;
+            if (data.action) ui.modelAction.value = data.action;
+            if (data.lighting) ui.lighting.value = data.lighting;
+            if (data.festival) ui.festival.value = data.festival;
+            ui.lockStyle.checked = data.lock === "true";
+            if (data.font) {
+                selectedFont = data.font;
+                ui.fontCards.forEach(c => c.classList.toggle('active', c.dataset.font === selectedFont));
+            }
+        }
+
+        // ─── CORE INTERACTIONS ───
+        function setRes(w, h) { ui.imgWidth.value = w; ui.imgHeight.value = h; }
+
+        ui.fontCards.forEach(card => card.addEventListener('click', () => {
+            ui.fontCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            selectedFont = card.dataset.font;
+        }));
+
+        // ─── IDEA GENERATOR ───
+        ui.aiWriteBtn.addEventListener('click', async () => {
+            if (!ui.sellingPoint.value) return showNotification("ERR: INPUT_NULL");
+            ui.aiWriteLoader.classList.remove('hidden'); ui.aiWriteBtn.disabled = true;
+            try {
+                const prompt = `You are a Visual Design Ideator. Goal: "${ui.sellingPoint.value}". Generate JSON: { "headline": "Thai catchy", "sub": "Thai detail", "benefit": "Thai | Thai", "cta": "Thai CTA", "footer": "social link", "subject": "Vivid English", "insight": "Mood Thai", "visualDna": "Artistic English" }`;
+                const result = await callGenerate({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseMimeType: "application/json" }
+                });
+                const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                populateForm(data);
+                showNotification("IDEAS_SYNCED");
+            } catch (err) {
+                showError(err.message);
+                showNotification("ERR: IDEATOR_FAIL");
+            } finally { ui.aiWriteLoader.classList.add('hidden'); ui.aiWriteBtn.disabled = false; }
+        });
+
+        // ─── MAIN EXECUTION ───
+        ui.executeBtn.addEventListener('click', async () => {
+            if (!ui.subject.value && !ui.headline.value) return showNotification("ERR: INSUFFICIENT_DATA");
+            setLoading(true, "Consulting Visual Director...");
+            ui.executeBtn.disabled = true;
+            try {
+                const d = {
+                    headline: ui.headline.value, sub: ui.sub.value, benefit: ui.benefit.value,
+                    cta: ui.cta.value, footer: ui.footer.value, subject: ui.subject.value,
+                    insight: ui.insight.value, visualDna: ui.visualDna.value,
+                    negativePrompt: ui.negativePrompt.value, type: ui.graphicType.value,
+                    style: ui.style.value, bg: ui.bg.value, width: ui.imgWidth.value,
+                    height: ui.imgHeight.value, tone: ui.colorTone.value,
+                    action: ui.modelAction.value, lighting: ui.lighting.value,
+                    festival: ui.festival.value, font: selectedFont
+                };
+
+                const ctaLogic = d.cta.trim() !== ""
+                    ? `[MANDATORY CTA COMPONENT]: Render a clearly visible button with exact text: "${d.cta}".`
+                    : `[CTA LOGIC]: NO CTA. DO NOT render any buttons or call-to-action elements.`;
+
+                const query = `
+[DIRECTIVE: ULTIMATE PRECISION SYNTHESIS]
+Generate a cohesive English prompt for Imagen 4.0 reflecting ALL fields below.
+
+[1. TECHNICAL SPECS]
+- Dimension: ${d.width}x${d.height}
+- Visual DNA: ${d.visualDna}
+- Target Insight: ${d.insight}
+
+[2. MANDATORY TEXT CONTENT]
+- HEADLINE: "${d.headline}"
+- SUB-HEADLINE: "${d.sub}"
+- BENEFITS: "${d.benefit}"
+${ctaLogic}
+- FOOTER: "${d.footer}"
+
+[3. STYLE & CINEMATOGRAPHY]
+- Style: ${d.style} | Type: ${d.type}
+- Subject: ${d.subject}
+- Lighting: ${d.lighting}, Background: ${d.bg}, Palette: ${d.tone}
+- Action: ${d.action}, Festival: ${d.festival}, Typography: ${d.font}
+
+Return ONLY JSON: { "prompt": "...", "negative_prompt": "..." }`;
+
+                ui.currentStep.textContent = "Architecting prompt...";
+                const archRes = await callGenerate({
+                    contents: [{ parts: [{ text: query }] }],
+                    systemInstruction: { parts: [{ text: "Master Visual Architect. Precision mandatory." }] },
+                    generationConfig: { responseMimeType: "application/json" }
+                });
+
+                const jsonResult = JSON.parse(archRes.candidates[0].content.parts[0].text);
+                ui.currentStep.textContent = "Executing Imagen job...";
+
+                const imgRes = await callImagen({
+                    instances: { prompt: jsonResult.prompt },
+                    parameters: { sampleCount: 1 }
+                });
+
+                const imageUrl = `data:image/png;base64,${imgRes.predictions[0].bytesBase64Encoded}`;
+                lastGeneratedImageUrl = imageUrl;
+                ui.resultImage.src = imageUrl;
+                ui.resultImage.classList.remove('hidden');
+                ui.imagePlaceholder.classList.add('hidden');
+                ui.downloadBar.classList.remove('hidden');
+                ui.jsonOutput.textContent = JSON.stringify(jsonResult, null, 2);
+                sessionHistory.push({ timestamp: Date.now(), data: d });
+                updateHistoryUI();
+                showNotification("PRECISION_JOB_COMPLETE");
+
+            } catch (e) {
+                showError(e.message);
+                showNotification("ERR: SYSTEM_FAIL");
+            } finally {
+                setLoading(false);
+                ui.executeBtn.disabled = false;
+            }
+        });
+
+        function downloadImage() {
+            if (!lastGeneratedImageUrl) return;
+            const a = document.createElement('a');
+            a.href = lastGeneratedImageUrl;
+            a.download = `JZ9_Output_${Date.now()}.png`;
+            a.click();
+            showNotification("DOWNLOAD_INITIATED");
+        }
+
+        function updateHistoryUI() {
+            ui.historyList.innerHTML = '';
+            sessionHistory.slice().reverse().forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `<span class="text-[var(--terminal-green)]">[${new Date(item.timestamp).toLocaleTimeString()}]</span> <span class="truncate ml-2">${item.data.headline || 'NO_TITLE'}</span>`;
+                div.onclick = () => populateForm(item.data);
+                ui.historyList.appendChild(div);
+            });
+        }
+
+        function setLoading(l, stepText = "") {
+            ui.status.classList.toggle('hidden', !l);
+            if (l) ui.currentStep.textContent = stepText;
+        }
+
+        function copyJson() {
+            const el = document.createElement("textarea");
+            el.value = ui.jsonOutput.textContent;
+            el.style.position = "fixed"; el.style.left = "-9999px";
+            document.body.appendChild(el); el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showNotification("CLIPBOARD_SYNCED");
+        }
+
+        function showNotification(m) {
+            ui.noti.textContent = `SYSTEM_MSG: ${m}`;
+            ui.noti.style.transform = 'translateY(0)';
+            setTimeout(() => { ui.noti.style.transform = 'translateY(150px)'; }, 2500);
+        }
+    </script>
+</body>
+</html>
