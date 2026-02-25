@@ -556,12 +556,12 @@
             if (!ui.sellingPoint.value) return showNotification("ERR: INPUT_NULL");
             ui.aiWriteLoader.classList.remove('hidden'); ui.aiWriteBtn.disabled = true;
             try {
-                const prompt = `You are a Visual Design Ideator. Goal: "${ui.sellingPoint.value}". Generate JSON: { "headline": "Thai catchy", "sub": "Thai detail", "benefit": "Thai | Thai", "cta": "Thai CTA", "footer": "social link", "subject": "Vivid English", "insight": "Mood Thai", "visualDna": "Artistic English" }`;
+                const prompt = `Goal: "${ui.sellingPoint.value}". Return ONLY a JSON object with these keys: headline (Thai catchy), sub (Thai sub-detail), benefit (Thai benefits separated by |), cta (Thai CTA), footer (social/web link), subject (vivid English visual description), insight (target audience mood in Thai), visualDna (artistic style in English).`;
                 const result = await callGenerate({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { responseMimeType: "application/json" }
+                    prompt,
+                    system: 'You are a Visual Design Ideator. Always respond with a valid JSON object only, no markdown, no explanation.'
                 });
-                const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                const data = JSON.parse(result.choices[0].message.content);
                 populateForm(data);
                 showNotification("IDEAS_SYNCED");
             } catch (err) {
@@ -593,7 +593,7 @@
 
                 const query = `
 [DIRECTIVE: ULTIMATE PRECISION SYNTHESIS]
-Generate a cohesive English prompt for Imagen 4.0 reflecting ALL fields below.
+Generate a cohesive English prompt for DALL-E 3 reflecting ALL fields below.
 
 [1. TECHNICAL SPECS]
 - Dimension: ${d.width}x${d.height}
@@ -617,20 +617,36 @@ Return ONLY JSON: { "prompt": "...", "negative_prompt": "..." }`;
 
                 ui.currentStep.textContent = "Architecting prompt...";
                 const archRes = await callGenerate({
-                    contents: [{ parts: [{ text: query }] }],
-                    systemInstruction: { parts: [{ text: "Master Visual Architect. Precision mandatory." }] },
-                    generationConfig: { responseMimeType: "application/json" }
+                    prompt: query,
+                    system: 'You are a Master Visual Architect. Respond ONLY with a valid JSON object containing "prompt" and "negative_prompt" keys. No markdown, no explanation.'
                 });
 
-                const jsonResult = JSON.parse(archRes.candidates[0].content.parts[0].text);
-                ui.currentStep.textContent = "Executing Imagen job...";
+                const jsonResult = JSON.parse(archRes.choices[0].message.content);
+                ui.currentStep.textContent = "Executing DALL-E job...";
+
+                // Map resolution to DALL-E 3 supported sizes
+                const w = parseInt(d.width), h = parseInt(d.height);
+                let dalleSize = '1024x1024';
+                if (w > h) dalleSize = '1792x1024';
+                else if (h > w) dalleSize = '1024x1792';
+
+                // Sanitize prompt for DALL-E content policy
+                const safePrompt = jsonResult.prompt
+                    .replace(/\b(gambling|casino|bet|wager|slot machine|poker|blackjack)\b/gi, 'entertainment')
+                    .replace(/\b(alcohol|beer|wine|whiskey|vodka)\b/gi, 'beverage')
+                    .replace(/\b(sexy|nude|naked|explicit)\b/gi, 'elegant')
+                    .substring(0, 3000); // DALL-E max prompt length
 
                 const imgRes = await callImagen({
-                    instances: { prompt: jsonResult.prompt },
-                    parameters: { sampleCount: 1 }
+                    prompt: safePrompt,
+                    size: dalleSize
                 });
 
-                const imageUrl = `data:image/png;base64,${imgRes.predictions[0].bytesBase64Encoded}`;
+                if (!imgRes.data || !imgRes.data[0] || !imgRes.data[0].b64_json) {
+                    throw new Error('Image generation blocked. Please modify your prompt content.');
+                }
+
+                const imageUrl = `data:image/png;base64,${imgRes.data[0].b64_json}`;
                 lastGeneratedImageUrl = imageUrl;
                 ui.resultImage.src = imageUrl;
                 ui.resultImage.classList.remove('hidden');
